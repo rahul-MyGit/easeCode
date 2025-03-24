@@ -2,7 +2,7 @@ import { db } from "@/server/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
-export const  SyncUser = async () => {
+const  SyncUser = async () => {
     const { userId } = await auth();
 
     if (!userId) {
@@ -35,3 +35,6 @@ export const  SyncUser = async () => {
 
     return redirect("/dashboard");
 }
+
+
+export default SyncUser;
