@@ -5,9 +5,7 @@ import { api, HydrateClient } from "@/trpc/server";
 import { Button } from "@/components/ui/button";
 export default async function Home() {
   return (
-    <Button onClick={() => {
-      alert("clicked");
-    }}>
+    <Button>
       Click me
     </Button>
   );
