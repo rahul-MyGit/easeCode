@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { UserButton } from '@clerk/nextjs'
 import React from 'react'
-import AppSidebar from './appsidebar/appsidebar'
+import AppSidebar from './_component/appsidebar'
 
 const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -10,7 +10,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
       <AppSidebar />
 
       <main className='w-full m-2'>
-        <div className='flex items-center ap-2 border-sidebar-border rounded-md'>
+        <div className='flex items-center gap-2 border-sidebar-border bg-sidebar shadow rounded-md p-2 px-4'>
           {/* <Searchbar /> */}
           <div className='ml-auto'></div>
           <UserButton />
@@ -18,7 +18,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
 
         <div className='h-4'></div>
         {/* main content */}
-        <div className='border-sidebar-border bg-sidebar'>
+        <div className='border-sidebar-border bg-sidebar border shadow rounded-md overflow-y-scroll h-[calc(100vh-6rem)] p-4'>
           {children}
         </div>
       </main>
