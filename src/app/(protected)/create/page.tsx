@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { api } from '@/trpc/react'
+import { toast } from 'sonner'
 
 type FormInput = {
     repoUrl: string
@@ -12,11 +14,23 @@ type FormInput = {
 }
 
 const CreatePage = () => {
-    const { register, handleSubmit, reset } = useForm<FormInput>()
+    const { register, handleSubmit, reset } = useForm<FormInput>();
+    const createProject = api.project.createProject.useMutation();
 
     const onSubmit = (data: FormInput) => {
-        window.alert(JSON.stringify(data, null, 2))
-        return true;
+        createProject.mutate({
+            name: data.projectName,
+            githubUrl: data.repoUrl,
+            githubToken: data.githubToken,
+        }, {
+            onSuccess: () => {
+                toast.success('Project created successfully');
+                reset();
+            },
+            onError: (error) => {
+                toast.error(error.message);
+            }
+        })
     }
 
     return <>
@@ -38,7 +52,7 @@ const CreatePage = () => {
                         <div className="h-4"></div>
                         <Input {...register('githubToken')} placeholder='GitHub Token (optional)' />
                         <div className="h-4"></div>
-                        <Button type='submit'>Check Project</Button>
+                        <Button type='submit' disabled={createProject.isPending}>Check Project</Button>
                     </form>
                 </div>
             </div>
