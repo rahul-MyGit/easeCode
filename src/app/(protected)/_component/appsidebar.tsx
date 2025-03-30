@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import useProject from '@/hooks/use-project'
 
 
 const items = [
@@ -33,23 +34,13 @@ const items = [
   },
 ]
 
-const projects = [
-  {
-    name: 'Project 1',
 
-  },
-  {
-    name: 'Project 2',
-  },
-  {
-    name: 'Project 3',
-  },
-]
 
 export default function AppSidebar() {
 
   const pathname = usePathname();
   const { open, setOpen, state } = useSidebar();
+  const { projects, projectId, setProjectId } = useProject();
 
   // Function to determine if tooltips should be shown
   const shouldShowTooltip = state === 'collapsed';
@@ -105,55 +96,37 @@ export default function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel>
-            your Projects
+            Your Projects
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {projects.map((proj) => {
+              {projects?.map((proj) => {
                 return (
                   <SidebarMenuItem key={proj.name}>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
                         <SidebarMenuButton asChild>
-                          <div>
+                          <div onClick={() => setProjectId(proj.id)}>
                             <div className={cn(
                               'rounded-sm border size-6 flex items-center justify-center rexr-sm bg-white text-primary flex-shrink-0',
                               {
-                                'bg-primary text-white': true // TODO: change to projectName === proj.id
+                                'bg-primary text-white': proj.id === projectId
                               }
                             )}>
                               {proj.name[0]}
                             </div>
-                            <span>{proj.name}</span>
+                            <span className={cn(proj.id === projectId ? 'text-purple-500' : '')}>{proj.name}</span>
                           </div>
                         </SidebarMenuButton>
-                      </TooltipTrigger>
-                      {shouldShowTooltip && (
-                        <TooltipContent side="right">
-                          {proj.name}
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
                   </SidebarMenuItem>
                 )
               })}
               <div className="h-2"></div>
               <SidebarMenuItem>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
                     <Link href='/create'>
                       <Button size='sm' variant={'outline'} className='w-fit'>
                         <Plus className="flex-shrink-0" />
                         <span className={cn(shouldShowTooltip ? 'sr-only' : '')}>Add Project</span>
                       </Button>
                     </Link>
-                  </TooltipTrigger>
-                  {shouldShowTooltip && (
-                    <TooltipContent side="right">
-                      Add Project
-                    </TooltipContent>
-                  )}
-                </Tooltip>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
