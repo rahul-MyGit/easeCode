@@ -7,7 +7,7 @@ const model = genAI.getGenerativeModel({
     model: 'gemini-1.5-flash',
 });
 
-export const aiSummariseCommit = async  (diff: string) => {
+export const aiSummariseCommit = async (diff: string) => {
     //https://github.com/owner/repo/commit/hash.diff
     const response = await model.generateContent([
         `You are an expert programmer, and you trying to summarize a git diff.
@@ -51,20 +51,26 @@ export const aiSummariseCommit = async  (diff: string) => {
 
 
 export async function summarizeCode(doc: Document) {
-    const code = doc.pageContent.slice(0, 10000);   //10000 char is the limit
+    console.log("Summarizing code for", doc.metadata.source)
 
-    const response = await model.generateContent([
-        `You are an intelligent senior software engineer who specialises in onboarding junior software engineers into projects`,
-        `You are onboarding a junior sofware engineer and explaining to them the purpose of the ${doc.metadata.source} file
+    try {
+        const code = doc.pageContent.slice(0, 10000);   //10000 char is the limit
+
+        const response = await model.generateContent([
+            `You are an intelligent senior software engineer who specialises in onboarding junior software engineers into projects`,
+            `You are onboarding a junior sofware engineer and explaining to them the purpose of the ${doc.metadata.source} file
         Here is the code:
         ---
         ${code}
         ---
         Give a summary no more than 100 words of the code above
         `
-    ]);
+        ]);
 
-    return response.response.text()
+        return response.response.text()
+    } catch (error) {
+        return "";
+    }
 }
 
 export async function generateEmbeddingFromGeminie(summary: string) {
@@ -76,5 +82,5 @@ export async function generateEmbeddingFromGeminie(summary: string) {
     const embedding = response.embedding
 
     return embedding.values
-    
+
 }
