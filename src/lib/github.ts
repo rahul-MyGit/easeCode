@@ -1,11 +1,13 @@
 import { db } from "@/server/db";
 import { Octokit } from "octokit";
+import axios from "axios";
+import { aiSummariseCommit } from "./gemine";
 
 export const octokit = new Octokit({
     oauth: process.env.GITHUB_ACCESS_TOKEN,
 });
 
-const githubUrl = 'https://github.com/docker/genai-stack'
+// const githubUrl = 'https://github.com/docker/genai-stack'
 
 type Response = {
     commitHash: string;
@@ -14,11 +16,14 @@ type Response = {
     commitAuthorName: string;
     commitDate: string;
 }
-
+//https://github.com/owner/repo/commits/main
+//githuburl/commmit/hash.diff -> to get the diff
 export const getCommitHashes = async (githubUrl: string): Promise<Response[]> => {
+    const [owner, repo] = githubUrl.split('/').slice(-2);
+    if(!owner || !repo) throw new Error("Invalid Github URL");
     const {data} = await octokit.rest.repos.listCommits({
-        owner: 'docker',
-        repo: 'genai-stack',
+        owner: owner,
+        repo: repo,
     });
 
     const sortedCommits = data.sort((a:any, b:any) => new Date(b.commit.author.date).getTime() - new Date(a.commit.author.date).getTime()) as any[];
@@ -36,12 +41,42 @@ export const pollCommits = async (projectId: string) => {
     const {project, githubUrl} = await fetchProjectGithubUrl(projectId);
     const commmitHashes = await getCommitHashes(githubUrl);
     const unProcessCommit = await filterUnprocessedCommits(projectId, commmitHashes);
-    return unProcessCommit;
+    const summariesResponse = await Promise.allSettled(unProcessCommit.map( (commit) => {
+        return summarizeCommits(githubUrl, commit.commitHash)
+    }))
+
+    const summaries = summariesResponse.map((summary) => {
+        if(summary.status === "fulfilled") {
+            return summary.value as string
+        }
+        return ""
+    })
+
+    const commits = await db.commit.createMany({
+        data: summaries.map((summary, index) => {
+            console.log('processin commit', index)
+            return {
+                projectId: projectId,
+                commitHash: unProcessCommit[index]!.commitHash,
+                summary,
+                commitMessage: unProcessCommit[index]!.commitMessage,
+                commitAuthorName: unProcessCommit[index]!.commitAuthorName,
+                commitAuthorAvatar: unProcessCommit[index]!.commitAuthorAvatar,
+                commitDate: unProcessCommit[index]!.commitDate,
+            }
+        })
+    })
+    
+    return commits;
 }
 
-//TODO: Implement this
 export const summarizeCommits = async (githubUrl: string, commitHash: string) => {
-
+    const { data } = await axios.get(`${githubUrl}/commit/${commitHash}.diff`, {
+        headers: {
+            Accept: 'application/vnd.github.v3.diff',
+        }
+    })
+    return await aiSummariseCommit(data) || ""
 }
 
 async function fetchProjectGithubUrl(projectId: string){
@@ -69,5 +104,3 @@ async function filterUnprocessedCommits(projectId: string, commitHashes: Respons
 
     return unprocessedCommits;
 }
-
-await pollCommits("5dc56f59-57b2-4746-b6f9-114c16a78e5b").then(console.log);
