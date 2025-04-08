@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import Commitlog from "./Commitlog";
+import QuestionCard from "./QuestionCard";
 
 export default function Dashboard() {
     const { project } = useProject();
@@ -38,8 +39,8 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-4">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                    AskQuestionsCard
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
+                    <QuestionCard />
                     MeetingCard
                 </div>
             </div>
