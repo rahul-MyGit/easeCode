@@ -49,4 +49,23 @@ export const projectRouter = createTRPCRouter({
         pollCommits(input.projectId).then().catch(console.error);
         return await ctx.db.commit.findMany({ where: { projectId: input.projectId } });
     }),
+
+    savedAnswer: protectedProcedure.input(
+        z.object({
+            question: z.string(),
+            answer: z.string(),
+            fileReferences: z.any(),
+            projectId: z.string(),
+        })
+    ).mutation(async ({ctx, input}) => {
+        return await ctx.db.question.create({
+            data: {
+                question: input.question,
+                answer: input.answer,
+                fileReferences: input.fileReferences,
+                projectId: input.projectId,
+                userId: ctx.user.userId!
+            }
+        })
+    })
 })

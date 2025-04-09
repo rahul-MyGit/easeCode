@@ -18,19 +18,19 @@ export async function askQuestion(question: string, projectId: string) {
     const vectorQuery = `[${queryVector.join(',')}]`;
 
     const res = await db.$queryRaw`
-    SELECT 'fileName', 'sourceCode', 'summary',
+    SELECT 'fileName', 'sourcecode', 'summary',
     1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) AS similarity
     FROM "SourceCodeEmbedding"
-    WHERE 1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) > 0.5
+    WHERE 1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) > .5
     AND "projectId" = ${projectId}
     ORDER BY similarity DESC
     LIMIT 10
-    ` as {fileName: string, sourceCode: string, summary: string }[];
+    ` as {fileName: string, sourcecode: string, summary: string }[];
 
     let context = '';
 
     for (const docs of res) {
-        context += `source: ${docs.fileName}\ncode content: ${docs.sourceCode}\n summary of file: ${docs.summary}\n\n`
+        context += `source: ${docs.fileName}\ncode content: ${docs.sourcecode}\n summary of file: ${docs.summary}\n\n`
     }
 
     (async () => {
@@ -53,9 +53,7 @@ export async function askQuestion(question: string, projectId: string) {
             END OF QUESTION
             AI assistant will take into account any CONTEXT BLOCK that is provided in a conversation.
             If the context does not provide the answer to question, the AI assistance will say, "I'm sorry, but i don't know about your query"
-            AI assistant will not apologize for the previous response, but instead will indicated new ingormation was gained.
             AI assistant will not invent anything that is not drawn directly from the context.
-            AI assistant will not hallucinate, if it does not know the answer, it will say so.
             Answer in markdown syntax, with code snippet if needed. Be as detailed as possible when asnwering, make sure there is an reasoning for the answer.
 
             `
@@ -69,7 +67,7 @@ export async function askQuestion(question: string, projectId: string) {
     })();
 
     return {
-        output: stream,
+        output: stream.value,
         fileReferences: res
     }
 }
