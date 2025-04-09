@@ -12,6 +12,8 @@ import { askQuestion } from './action'
 import { readStreamableValue } from 'ai/rsc'
 import  MDEditor  from '@uiw/react-md-editor'
 import CodeReferences from './CodeReferences'
+import { api } from '@/trpc/react'
+import { toast } from 'sonner'
 
 // INput , text fied, TextINputdata => value | textINput => stack [text | INput ]
 // Action for User => [] =>
@@ -22,6 +24,7 @@ const askQuestionCard = () => {
   const [loading, setLoading] = useState(false)
   const [fileReferences, setFileReferences] = useState<{fileName: string, sourcecode: string, summary: string}[]>([])
   const [answer, setAnswer] = useState('')
+  const saveAnswer = api.project.savedAnswer.useMutation()
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setAnswer('');
@@ -49,9 +52,25 @@ const askQuestionCard = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className='sm:max-w-[80vw]'>
         <DialogHeader>
+          <div className="flex items-center ep-2">
           <DialogTitle>
             <Image src='/logo.png' alt='logo' width={40} height={40} />
           </DialogTitle>
+          <Button variant='outline' disabled={saveAnswer.isPending} type='button' onClick={() => {
+            saveAnswer.mutate({
+              question, 
+              answer,
+              fileReferences,
+              projectId: project!.id
+              }, {
+                onSuccess: () => {
+                  toast.success('Answer saved')
+                },
+                onError: (error) => {
+                  toast.error(error.message)
+                }
+              })}}>Save Answer</Button>
+          </div>
         </DialogHeader>
         <MDEditor.Markdown source={answer} className='max-w-[70vw] -full max-h-[40vh] overflow-scroll' />
         <CodeReferences fileReferences={fileReferences} />
